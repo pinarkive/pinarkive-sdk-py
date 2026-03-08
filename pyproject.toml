@@ -1,7 +1,7 @@
 [project]
 name = "pinarkive-sdk-py"
-version = "2.3.1"
-description = "Python SDK for the Pinarkive API v2.3.1 - Easy IPFS file management with directory DAG uploads, file renaming, and enhanced API key management. Includes type hints for better IDE support."
+version = "3.0.0"
+description = "Python SDK for PinArkive API v3 – minimal client (upload, pin, remove, users/me, uploads, tokens, status, allocations). See https://pinarkive.com/docs.php"
 authors = [
   {name = "ITCS VIP"},
   {name = "Joel_da"}

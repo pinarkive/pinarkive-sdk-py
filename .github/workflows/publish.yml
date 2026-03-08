@@ -1,0 +1,35 @@
+# Publish to PyPI on tag push (v*). Uses PyPI Trusted Publisher (OIDC) – no API token needed.
+# Configure the trusted publisher at: https://pypi.org/manage/project/pinarkive-sdk-py/settings/publishing/
+# Owner: pinarkive, Repository: pinarkive-sdk-py, Workflow: publish.yml, Environment: release
+
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build
+        run: pip install build
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
