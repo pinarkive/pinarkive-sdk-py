@@ -4,7 +4,7 @@ Minimal client for https://pinarkive.com/docs.php (upload, pin, remove, users/me
 Errors raise PinarkiveError with status_code and API body (error, message, code) per API v3 HTTP codes.
 """
 
-__version__ = "3.0.0"
+__version__ = "3.0.1"
 
 import io
 import os

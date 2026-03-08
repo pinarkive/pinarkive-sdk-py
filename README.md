@@ -2,7 +2,7 @@
 
 Minimal Python client for the **PinArkive API v3**. Upload files, pin by CID, manage tokens, and check status. See [pinarkive.com/docs.php](https://pinarkive.com/docs.php).
 
-**Version:** 3.0.0
+**Version:** 3.0.1
 
 ## Installation
 
