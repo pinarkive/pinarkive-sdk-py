@@ -2,7 +2,7 @@
 
 Minimal Python client for the **PinArkive API v3**. Upload files, pin by CID, manage tokens, and check status. See [pinarkive.com/docs.php](https://pinarkive.com/docs.php).
 
-**Version:** 3.0.1
+**Version:** 3.1.0
 
 ## Installation
 
@@ -36,6 +36,7 @@ print(data["uploads"])
 - **API Key:** `PinarkiveClient(api_key="...")` — sent as `X-API-Key` header.
 - **JWT:** `PinarkiveClient(token="...")` — sent as `Authorization: Bearer <token>`.
 - **Base URL:** optional third argument, default `https://api.pinarkive.com/api/v3`.
+- **request_source:** optional keyword argument. When set to `"web"`, the client sends `X-Request-Source: web` on every Bearer-authenticated request (not when using API Key), so the backend classifies them as **WEB** in logs instead of **JWT**. Use this when the SDK runs from a web app.
 
 ## API Methods (minimal set)
 
@@ -45,6 +46,7 @@ print(data["uploads"])
 | `get_plans()` | GET /plans/ |
 | `get_peers()` | GET /peers/ |
 | `login(email, password)` | POST /auth/login |
+| `verify_2fa_login(temporary_token, code)` | POST /auth/2fa/verify-login |
 | `upload_file(path, cluster_id=None, timelock=None)` | POST /files/ |
 | `upload_directory(dir_path, cluster_id=None, timelock=None)` | POST /files/directory |
 | `upload_directory_dag(files_dict, dir_name=None, cluster_id=None, timelock=None)` | POST /files/directory-dag |
@@ -52,9 +54,9 @@ print(data["uploads"])
 | `remove_file(cid)` | DELETE /files/remove/:cid |
 | `get_me()` | GET /users/me |
 | `list_uploads(page=1, limit=20)` | GET /users/me/uploads |
-| `generate_token(name, label=None, expires_in_days=None)` | POST /tokens/generate |
+| `generate_token(name, label=None, expires_in_days=None, scopes=None, totp_code=None)` | POST /tokens/generate |
 | `list_tokens()` | GET /tokens/list |
-| `revoke_token(name)` | DELETE /tokens/revoke/:name |
+| `revoke_token(name, totp_code=None)` | DELETE /tokens/revoke/:name |
 | `get_status(cid, cluster_id=None)` | GET /status/:cid |
 | `get_allocations(cid, cluster_id=None)` | GET /allocations/:cid |
 
@@ -68,7 +70,9 @@ On HTTP 4xx/5xx the client raises **`PinarkiveError`** with:
 - `message` — from API `message` or `error`
 - `body` — full JSON body
 - `.error` — API field `error`
-- `.code` — API field `code` (e.g. `email_not_verified`)
+- `.code` — API field `code` (e.g. `email_not_verified`, `missing_scope`)
+- `.required` — for 403 `missing_scope`: the required scope
+- `.retry_after` — for 429: seconds until retry (from body or `Retry-After` header)
 
 ```python
 try:
@@ -78,6 +82,12 @@ except PinarkiveError as e:
 ```
 
 ## Changelog
+
+### 3.1.0
+
+- **Request source:** `request_source="web"` sends `X-Request-Source: web` on Bearer requests.
+- **Scopes & 2FA:** `generate_token(..., scopes=..., totp_code=...)`; `revoke_token(name, totp_code=...)`. `verify_2fa_login(temporary_token, code)` for login with 2FA.
+- **Errors:** `PinarkiveError.required` (403 missing_scope), `PinarkiveError.retry_after` (429).
 
 ### 3.0.0
 

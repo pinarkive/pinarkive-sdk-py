@@ -4,7 +4,7 @@ Minimal client for https://pinarkive.com/docs.php (upload, pin, remove, users/me
 Errors raise PinarkiveError with status_code and API body (error, message, code) per API v3 HTTP codes.
 """
 
-__version__ = "3.0.1"
+__version__ = "3.1.0"
 
 import io
 import os
@@ -17,14 +17,22 @@ class PinarkiveError(Exception):
     """
     Raised when the API returns HTTP 4xx or 5xx.
     Attributes: status_code (int), message (str), body (dict with error, message, code from API).
+    For 403 missing_scope use .required; for 429 use .retry_after (seconds).
     API v3 codes: 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found,
     409 Conflict, 413 Payload Too Large, 429 Too Many Requests, 500 Internal Server Error, 503 Service Unavailable.
     """
 
-    def __init__(self, status_code: int, message: str, body: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        status_code: int,
+        message: str,
+        body: Optional[Dict[str, Any]] = None,
+        retry_after: Optional[int] = None,
+    ):
         self.status_code = status_code
         self.message = message
         self.body = body or {}
+        self._retry_after = retry_after
         super().__init__(f"[{status_code}] {message}")
 
     @property
@@ -34,8 +42,20 @@ class PinarkiveError(Exception):
 
     @property
     def code(self) -> str:
-        """API field 'code' (e.g. email_not_verified, account_disabled)."""
+        """API field 'code' (e.g. email_not_verified, account_disabled, missing_scope)."""
         return self.body.get("code", "")
+
+    @property
+    def required(self) -> str:
+        """For 403 missing_scope: the required scope."""
+        return self.body.get("required", "")
+
+    @property
+    def retry_after(self) -> Optional[int]:
+        """For 429: seconds until retry (from body or Retry-After header)."""
+        if self.body.get("retryAfter") is not None:
+            return int(self.body["retryAfter"])
+        return self._retry_after
 
 
 class PinarkiveClient:
@@ -46,10 +66,22 @@ class PinarkiveClient:
         token: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: str = "https://api.pinarkive.com/api/v3",
+        *,
+        request_source: Optional[str] = None,
     ):
+        """
+        Args:
+            token: Bearer token (JWT).
+            api_key: API key (sent as X-API-Key header).
+            base_url: Base URL (default https://api.pinarkive.com/api/v3).
+            request_source: If "web", sends X-Request-Source: web on every Bearer-authenticated
+                request so the backend classifies them as WEB in logs. Only applied when using
+                token (Bearer); never sent when using api_key.
+        """
         self.base_url = base_url.rstrip("/")
         self.token = token
         self.api_key = api_key
+        self.request_source = request_source
         self.session = requests.Session()
 
     def _headers(self, auth: bool = True) -> Dict[str, str]:
@@ -57,6 +89,8 @@ class PinarkiveClient:
         if auth:
             if self.token:
                 headers["Authorization"] = f"Bearer {self.token}"
+                if self.request_source == "web":
+                    headers["X-Request-Source"] = "web"
             elif self.api_key:
                 headers["X-API-Key"] = self.api_key
         return headers
@@ -81,7 +115,20 @@ class PinarkiveClient:
                     msg = body.get("message") or body.get("error") or msg
                 except Exception:
                     pass
-            raise PinarkiveError(r.status_code, msg, body)
+            retry_after = None
+            if r.status_code == 429:
+                ra, ha = body.get("retryAfter"), r.headers.get("Retry-After")
+                if ra is not None:
+                    try:
+                        retry_after = int(ra)
+                    except (TypeError, ValueError):
+                        pass
+                if retry_after is None and ha:
+                    try:
+                        retry_after = int(ha)
+                    except (TypeError, ValueError):
+                        pass
+            raise PinarkiveError(r.status_code, msg, body, retry_after)
         return r
 
     # --- Public (no auth) ---
@@ -98,9 +145,18 @@ class PinarkiveClient:
         return self._request("GET", "/peers/", auth=False).json()
 
     def login(self, email: str, password: str) -> Any:
-        """POST /auth/login. Returns { token, user? }."""
+        """POST /auth/login. Returns { token, user? } or { requires2FA: true, temporaryToken }. If requires2FA, call verify_2fa_login()."""
         return self._request(
             "POST", "/auth/login", auth=False, json={"email": email, "password": password}
+        ).json()
+
+    def verify_2fa_login(self, temporary_token: str, code: str) -> Any:
+        """POST /auth/2fa/verify-login – complete login after 2FA. Returns { token, user? }."""
+        return self._request(
+            "POST",
+            "/auth/2fa/verify-login",
+            auth=False,
+            json={"temporaryToken": temporary_token, "code": code},
         ).json()
 
     # --- Files ---
@@ -202,22 +258,31 @@ class PinarkiveClient:
         name: str,
         label: Optional[str] = None,
         expires_in_days: Optional[int] = None,
+        scopes: Optional[list] = None,
+        totp_code: Optional[str] = None,
     ) -> Any:
-        """POST /tokens/generate – name required, optional label (default cli-access), expiresInDays."""
+        """POST /tokens/generate – name required, optional label, expiresInDays, scopes[], totp_code (2FA)."""
         body = {"name": name}
         if label is not None:
             body["label"] = label
         if expires_in_days is not None:
             body["expiresInDays"] = expires_in_days
+        if scopes:
+            body["scopes"] = scopes
+        if totp_code:
+            body["totpCode"] = totp_code
         return self._request("POST", "/tokens/generate", json=body).json()
 
     def list_tokens(self) -> Any:
         """GET /tokens/list"""
         return self._request("GET", "/tokens/list").json()
 
-    def revoke_token(self, name: str) -> None:
-        """DELETE /tokens/revoke/:name"""
-        self._request("DELETE", f"/tokens/revoke/{name}")
+    def revoke_token(self, name: str, totp_code: Optional[str] = None) -> None:
+        """DELETE /tokens/revoke/:name. Pass totp_code when account has 2FA."""
+        if totp_code:
+            self._request("DELETE", f"/tokens/revoke/{name}", json={"totpCode": totp_code})
+        else:
+            self._request("DELETE", f"/tokens/revoke/{name}")
 
     # --- Status ---
     def get_status(self, cid: str, cluster_id: Optional[str] = None) -> Any:
