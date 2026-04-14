@@ -1,6 +1,6 @@
 """
 Pinarkive SDK Python – API v3.
-Minimal client for https://pinarkive.com/docs.php (upload, pin, remove, users/me, uploads, tokens, status, allocations).
+Minimal client for https://docs.pinarkive.com (upload, pin, remove, users/me, uploads, tokens, status, allocations).
 Errors raise PinarkiveError with status_code and API body (error, message, code) per API v3 HTTP codes.
 """
 

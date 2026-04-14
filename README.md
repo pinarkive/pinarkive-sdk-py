@@ -1,8 +1,8 @@
 # Pinarkive Python SDK
 
-Minimal Python client for the **PinArkive API v3**. Upload files, pin by CID, manage tokens, and check status. See [pinarkive.com/docs.php](https://pinarkive.com/docs.php).
+Minimal Python client for the **PinArkive API v3**. Upload files, pin by CID, manage tokens, and check status. See [docs.pinarkive.com](https://docs.pinarkive.com).
 
-**Version:** 3.1.1
+**Version:** 3.1.2
 
 ## Installation
 
@@ -29,6 +29,20 @@ client = PinarkiveClient(token=login["token"])
 # List uploads
 data = client.list_uploads(page=1, limit=20)
 print(data["uploads"])
+```
+
+### Directory DAG (`upload_directory_dag`)
+
+The API expects multipart field **`files`** (repeated); each part’s **filename** is the path inside the DAG. The response root CID is **`cid`**.
+
+```python
+with open("1.png", "rb") as f1, open("2.png", "rb") as f2:
+    dag = client.upload_directory_dag(
+        {"1.png": f1, "2.png": f2},
+        dir_name="mydag",
+        cluster_id="cl0-global",
+    )
+print(dag["cid"])  # gateway …/ipfs/<cid>/1.png
 ```
 
 ## Authentication
@@ -83,6 +97,10 @@ except PinarkiveError as e:
 
 ## Changelog
 
+### 3.1.2
+
+- **Docs:** Links updated to [https://docs.pinarkive.com](https://docs.pinarkive.com).
+
 ### 3.1.0
 
 - **Request source:** `request_source="web"` sends `X-Request-Source: web` on Bearer requests.
@@ -99,7 +117,7 @@ See also [CHANGELOG.md](./CHANGELOG.md).
 
 - **API v3:** Base URL is now `https://api.pinarkive.com/api/v3` (was `/api/v2`). v1/v2 are deprecated (410).
 - **Errors:** On 4xx/5xx the client raises `PinarkiveError` with `status_code`, `message`, `body`, and `.error` / `.code` from the API (no raw `Response` on failure).
-- **Minimal surface:** Only endpoints documented at [pinarkive.com/docs.php](https://pinarkive.com/docs.php): health, plans, peers, login, files (upload, directory, directory-dag, pin, remove), users/me, uploads, tokens (generate with `name` / `label` / `expiresInDays`), status, allocations. Optional `cluster_id` and `timelock` (ISO 8601) on upload/pin.
+- **Minimal surface:** Only endpoints documented at [docs.pinarkive.com](https://docs.pinarkive.com): health, plans, peers, login, files (upload, directory, directory-dag, pin, remove), users/me, uploads, tokens (generate with `name` / `label` / `expiresInDays`), status, allocations. Optional `cluster_id` and `timelock` (ISO 8601) on upload/pin.
 - **Removed:** `rename_file`; token options `permissions`, `ip_allowlist`. Use API `label` and `expiresInDays` only.
 - **Pin:** `pin_cid` now accepts `original_name`, `custom_name` (replacing the old `filename`).
 - **Return values:** Successful calls return decoded JSON (dict); methods that return nothing on success (`remove_file`, `revoke_token`) return `None`.
@@ -115,5 +133,5 @@ See also [CHANGELOG.md](./CHANGELOG.md).
 
 ## Links
 
-- [API docs](https://pinarkive.com/docs.php)
+- [API docs](https://docs.pinarkive.com)
 - [Repository](https://github.com/pinarkive/pinarkive-sdk-py)
