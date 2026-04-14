@@ -2,7 +2,7 @@
 
 Minimal Python client for the **PinArkive API v3**. Upload files, pin by CID, manage tokens, and check status. See [pinarkive.com/docs.php](https://pinarkive.com/docs.php).
 
-**Version:** 3.1.0
+**Version:** 3.1.1
 
 ## Installation
 
@@ -88,6 +88,12 @@ except PinarkiveError as e:
 - **Request source:** `request_source="web"` sends `X-Request-Source: web` on Bearer requests.
 - **Scopes & 2FA:** `generate_token(..., scopes=..., totp_code=...)`; `revoke_token(name, totp_code=...)`. `verify_2fa_login(temporary_token, code)` for login with 2FA.
 - **Errors:** `PinarkiveError.required` (403 missing_scope), `PinarkiveError.retry_after` (429).
+
+### 3.1.1
+
+- **Fix:** `upload_directory_dag` now sends multipart with repeated field name **`files`**, with each part’s **filename** equal to the relative path in the DAG (backend multer `upload.array('files')`). The previous `files[i][path]` / `files[i][content]` format is not accepted by the backend.
+
+See also [CHANGELOG.md](./CHANGELOG.md).
 
 ### 3.0.0
 

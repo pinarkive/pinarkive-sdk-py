@@ -4,7 +4,7 @@ Minimal client for https://pinarkive.com/docs.php (upload, pin, remove, users/me
 Errors raise PinarkiveError with status_code and API body (error, message, code) per API v3 HTTP codes.
 """
 
-__version__ = "3.1.0"
+__version__ = "3.1.1"
 
 import io
 import os
@@ -197,17 +197,24 @@ class PinarkiveClient:
         cluster_id: Optional[str] = None,
         timelock: Optional[str] = None,
     ) -> Any:
-        """POST /files/directory-dag – multipart files[i][path], files[i][content]; optional cl, timelock."""
+        """
+        POST /files/directory-dag – multipart with repeated field name `files`.
+
+        The multipart **filename** must be the relative path inside the DAG (e.g. "1.png", "assets/logo.svg").
+        This matches the backend multer config: upload.array('files').
+        """
         files = []
-        for i, (path, content) in enumerate(files_dict.items()):
-            files.append((f"files[{i}][path]", path))
+        for rel_path, content in files_dict.items():
+            rel_path = str(rel_path).replace("\\", "/").strip()
+            if not rel_path or rel_path.startswith("/") or any(seg == ".." for seg in rel_path.split("/")):
+                raise ValueError(f"Invalid DAG path: {rel_path}")
+
             if hasattr(content, "read"):
-                fileobj = content
-                files.append((f"files[{i}][content]", (os.path.basename(path), fileobj, "application/octet-stream")))
+                files.append(("files", (rel_path, content, "application/octet-stream")))
             elif isinstance(content, bytes):
-                files.append((f"files[{i}][content]", (os.path.basename(path), io.BytesIO(content), "application/octet-stream")))
+                files.append(("files", (rel_path, io.BytesIO(content), "application/octet-stream")))
             else:
-                files.append((f"files[{i}][content]", (os.path.basename(path), io.BytesIO(str(content).encode("utf-8")), "text/plain")))
+                files.append(("files", (rel_path, io.BytesIO(str(content).encode("utf-8")), "application/octet-stream")))
         data = {}
         if dir_name:
             data["dirName"] = dir_name
