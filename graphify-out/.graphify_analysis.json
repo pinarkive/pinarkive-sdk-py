@@ -1,0 +1,169 @@
+{
+  "communities": {
+    "0": [
+      "pinarkive_client_pinarkiveclient",
+      "pinarkive_client_pinarkiveclient_headers",
+      "pinarkive_client_pinarkiveclient_list_tokens",
+      "pinarkive_client_pinarkiveclient_remove_file",
+      "pinarkive_client_pinarkiveclient_revoke_token",
+      "pinarkive_client_pinarkiveclient_upload_directory_dag",
+      "pinarkive_client_rationale_200",
+      "pinarkive_client_rationale_248",
+      "pinarkive_client_rationale_288",
+      "pinarkive_client_rationale_62"
+    ],
+    "1": [
+      "any",
+      "pinarkive_client_pinarkiveclient_get_me",
+      "pinarkive_client_pinarkiveclient_get_peers",
+      "pinarkive_client_pinarkiveclient_get_plans",
+      "pinarkive_client_pinarkiveclient_health",
+      "pinarkive_client_pinarkiveclient_request",
+      "response"
+    ],
+    "2": [
+      "exception",
+      "pinarkive_client_pinarkiveerror",
+      "pinarkive_client_pinarkiveerror_error",
+      "pinarkive_client_rationale_17"
+    ],
+    "3": [
+      "pathlike",
+      "pinarkive_client_pinarkiveclient_upload_file",
+      "pinarkive_client_rationale_169"
+    ],
+    "4": [
+      "pinarkive_client_pinarkiveclient_init",
+      "pinarkive_client_pinarkiveerror_init",
+      "pinarkive_client_rationale_72"
+    ],
+    "5": [
+      "pinarkive_client",
+      "pinarkive_client_rationale_1"
+    ],
+    "6": [
+      "pinarkive_client_pinarkiveclient_generate_token",
+      "pinarkive_client_rationale_271"
+    ],
+    "7": [
+      "pinarkive_client_pinarkiveclient_get_allocations",
+      "pinarkive_client_rationale_301"
+    ],
+    "8": [
+      "pinarkive_client_pinarkiveclient_get_status",
+      "pinarkive_client_rationale_296"
+    ],
+    "9": [
+      "pinarkive_client_pinarkiveclient_list_uploads",
+      "pinarkive_client_rationale_257"
+    ],
+    "10": [
+      "pinarkive_client_pinarkiveclient_login",
+      "pinarkive_client_rationale_148"
+    ],
+    "11": [
+      "pinarkive_client_pinarkiveclient_pin_cid",
+      "pinarkive_client_rationale_235"
+    ],
+    "12": [
+      "pinarkive_client_pinarkiveclient_upload_directory",
+      "pinarkive_client_rationale_185"
+    ],
+    "13": [
+      "pinarkive_client_pinarkiveclient_verify_2fa_login",
+      "pinarkive_client_rationale_154"
+    ],
+    "14": [
+      "pinarkive_client_pinarkiveerror_code",
+      "pinarkive_client_rationale_45"
+    ],
+    "15": [
+      "pinarkive_client_pinarkiveerror_required",
+      "pinarkive_client_rationale_50"
+    ],
+    "16": [
+      "pinarkive_client_pinarkiveerror_retry_after",
+      "pinarkive_client_rationale_55"
+    ],
+    "17": [
+      "pkg_pinarkive_sdk_py"
+    ]
+  },
+  "cohesion": {
+    "0": 0.2,
+    "1": 0.47619047619047616,
+    "2": 0.5,
+    "3": 0.6666666666666666,
+    "4": 0.6666666666666666,
+    "5": 1.0,
+    "6": 1.0,
+    "7": 1.0,
+    "8": 1.0,
+    "9": 1.0,
+    "10": 1.0,
+    "11": 1.0,
+    "12": 1.0,
+    "13": 1.0,
+    "14": 1.0,
+    "15": 1.0,
+    "16": 1.0,
+    "17": 1.0
+  },
+  "gods": [
+    {
+      "id": "pinarkive_client_pinarkiveclient",
+      "label": "PinarkiveClient",
+      "degree": 22
+    },
+    {
+      "id": "pinarkive_client_pinarkiveerror",
+      "label": "PinarkiveError",
+      "degree": 9
+    },
+    {
+      "id": "pinarkive_client_rationale_1",
+      "label": "Pinarkive SDK Python \u2013 API v3. Minimal client for https://docs.pinarkive.com (u",
+      "degree": 1
+    },
+    {
+      "id": "pinarkive_client_rationale_17",
+      "label": "Raised when the API returns HTTP 4xx or 5xx.     Attributes: status_code (int),",
+      "degree": 1
+    },
+    {
+      "id": "pinarkive_client_rationale_45",
+      "label": "API field 'code' (e.g. email_not_verified, account_disabled, missing_scope).",
+      "degree": 1
+    },
+    {
+      "id": "pinarkive_client_rationale_50",
+      "label": "For 403 missing_scope: the required scope.",
+      "degree": 1
+    },
+    {
+      "id": "pinarkive_client_rationale_55",
+      "label": "For 429: seconds until retry (from body or Retry-After header).",
+      "degree": 1
+    },
+    {
+      "id": "pinarkive_client_rationale_62",
+      "label": "Client for PinArkive API v3. Auth: Bearer token or X-API-Key.",
+      "degree": 1
+    },
+    {
+      "id": "pinarkive_client_rationale_72",
+      "label": "Args:             token: Bearer token (JWT).             api_key: API key (sen",
+      "degree": 1
+    },
+    {
+      "id": "pinarkive_client_rationale_148",
+      "label": "POST /auth/login. Returns { token, user? } or { requires2FA: true, temporaryToke",
+      "degree": 1
+    }
+  ],
+  "surprises": [],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}
